@@ -59,13 +59,13 @@ class MainViewController: UIViewController {
   @IBAction func actionAdd() {
 
     example(of: "never") {
-      Observable.never().subscribe { event in
+      _ = Observable.never().subscribe { event in
         print(event)
       }
     }
 
     example(of: "range") {
-      Observable<Int>
+      _ = Observable<Int>
         .range(start: 1, count: 10)
         .subscribe(onNext: { i in
           let n = Double(i)
@@ -100,7 +100,7 @@ class MainViewController: UIViewController {
       enum MyError: Error {
         case anError
       }
-      Observable<Int>
+      _ = Observable<Int>
         .create { observer in
           observer.on(.next(1))
           observer.onNext(3)
@@ -206,6 +206,46 @@ class MainViewController: UIViewController {
           print(event)
         }
         .disposed(by: DisposeBag())
+    }
+    
+    example(of: "do") {
+      let disposeBag = DisposeBag()
+      Observable
+        .never()
+        .do(onNext: { _ in
+          print("onNext")
+        }, afterNext: { _ in
+          print("afterNext")
+        }, onError: { error in
+          print("onError")
+        }, afterError: { error in
+          print("afterError")
+        }, onCompleted: {
+          print("onCompleted")
+        }, afterCompleted: {
+          print("afterCompleted")
+        }, onSubscribe: {
+          print("onSubscribe")
+        }, onSubscribed: {
+          print("onSubscribed")
+        }, onDispose: {
+          print("onDispose")
+        })
+        .subscribe { event in
+          print(event)
+        }
+        .disposed(by: disposeBag)
+    }
+    
+    example(of: "debug") {
+      let disposeBag = DisposeBag()
+      Observable
+        .never()
+        .debug("myDebug", trimOutput: true)
+        .subscribe { event in
+          print(event)
+        }
+        .disposed(by: disposeBag)
     }
 
   }
