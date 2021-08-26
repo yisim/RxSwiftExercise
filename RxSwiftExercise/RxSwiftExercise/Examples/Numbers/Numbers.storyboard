@@ -9,7 +9,7 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--Numbers-->
+        <!--Numbers View Controller-->
         <scene sceneID="s0d-6b-0kx">
             <objects>
                 <viewController id="Y6W-OH-hqX" customClass="NumbersViewController" customModule="RxSwiftExercise" customModuleProvider="target" sceneMemberID="viewController">
@@ -82,7 +82,6 @@
                             <constraint firstItem="vyM-Si-kZ1" firstAttribute="top" secondItem="0cF-Ud-l93" secondAttribute="bottom" constant="8" id="zTW-KI-6qq"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="Numbers" id="sc7-1J-yz6"/>
                     <connections>
                         <outlet property="number1" destination="0cF-Ud-l93" id="arw-UA-Bn0"/>
                         <outlet property="number2" destination="vyM-Si-kZ1" id="Md2-Gz-grQ"/>

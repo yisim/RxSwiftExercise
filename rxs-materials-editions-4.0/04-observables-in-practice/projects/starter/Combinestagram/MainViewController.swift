@@ -44,6 +44,8 @@ class MainViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
 
+    actionAdd()
+
   }
   
   @IBAction func actionClear() {
@@ -55,63 +57,155 @@ class MainViewController: UIViewController {
   }
 
   @IBAction func actionAdd() {
-    
-    example(of: "just, of, from") {
-      let one = 1
-      let two = 2
-      let three = 3
-      Observable
-        .just(one)
-        .subscribe(onNext: { value in
-          print(value)
-        })
-        .disposed(by: DisposeBag())
-      
-      Observable
-        .of(one, two, three)
-        .subscribe(onNext: { value in
-          print(value)
-        })
-        .disposed(by: DisposeBag())
-      
-      Observable
-        .of([one, two, three])
-        .subscribe(onNext: { value in
-          print(value)
-        })
-        .disposed(by: DisposeBag())
-      
-      Observable
-        .from([one, two, three])
-        .subscribe(onNext: { value in
-          print(value)
-        })
-        .disposed(by: DisposeBag())
-    }
-    
-    example(of: "subscribe") {
-      let one = 1
-      let two = 2
-      let three = 3
-      let observable = Observable.of(one, two, three)
-      _ = observable.subscribe { event in
+
+    example(of: "never") {
+      Observable.never().subscribe { event in
         print(event)
       }
     }
-    
-    example(of: "empty") {
-      let observable = Observable<Void>.empty()
-      _ = observable.subscribe({ event in
+
+    example(of: "range") {
+      Observable<Int>
+        .range(start: 1, count: 10)
+        .subscribe(onNext: { i in
+          let n = Double(i)
+
+          let fibonacci = Int(
+            ((pow(1.61803, n) - pow(0.61803, n)) /
+              2.23606).rounded()
+          )
+
+          print(fibonacci)
+        })
+    }
+
+    example(of: "dispose") {
+      let observable = Observable.of("a", "b", "c")
+      let subscription = observable.subscribe { event in
         print(event)
-      })
-      
-      _ = observable.subscribe(onNext: { element in
+      }
+      subscription.dispose()
+    }
+
+    example(of: "disposeBag") {
+      let disposeBag = DisposeBag()
+      let observable = Observable.of("a", "b", "c")
+      let subscription = observable.subscribe { event in
+        print(event)
+      }
+      subscription.disposed(by: disposeBag)
+    }
+
+    example(of: "creat") {
+      enum MyError: Error {
+        case anError
+      }
+      Observable<Int>
+        .create { observer in
+          observer.on(.next(1))
+          observer.onNext(3)
+//          observer.onError(MyError.anError)
+//          observer.onCompleted()
+          observer.on(.next(2))
+          return Disposables.create()
+        }
+        .subscribe {
+          print($0)
+        }
+          onError: { print($0)
+        } onCompleted: {
+          print("completed")
+        } onDisposed: {
+          print("disposed")
+        }
+//        .disposed(by: DisposeBag())
+
+    }
+
+    example(of: "deferred") {
+      let disposeBag = DisposeBag()
+      var flip = false
+      let observable = Observable<Int>.deferred {
+        flip.toggle()
+        if flip {
+          return Observable.of(1,2,3)
+        } else {
+          return Observable.of(4,5,6)
+        }
+      }
+
+      for _ in 0...3 {
+        observable
+          .subscribe(
+            onNext: { print($0) },
+            onCompleted: { print("completed") },
+            onDisposed: { print("disposed") }
+          )
+          .disposed(by: disposeBag)
+      }
+    }
+
+    example(of: "traits") {
+      Single<Int>.create { observer in
+        observer(.success(1))
+        return Disposables.create()
+      }
+      .subscribe { element in
         print(element)
-      }, onError: { error in
+      } onError: { error in
         print(error)
-      }, onCompleted: {
-        print("complete")
-      })
+      }
+      .disposed(by: DisposeBag())
+
+    }
+
+    example(of: "single") {
+
+      let disposeBag = DisposeBag()
+
+      enum FileReadError: Error {
+        case fileNotfound
+        case unreadable
+        case encodingFaild
+      }
+
+      func loadText(from name: String) -> Single<String> {
+        return Single<String>
+          .create { single in
+            let disposable = Disposables.create()
+            guard let path = Bundle.main.path(forResource: name, ofType: "") else {
+              single(.error(FileReadError.fileNotfound))
+              return disposable
+            }
+            guard let data = FileManager.default.contents(atPath: path) else {
+              single(.error(FileReadError.unreadable))
+              return disposable
+            }
+            guard let contents = String(data: data, encoding: .utf8) else {
+              single(.error(FileReadError.encodingFaild))
+              return disposable
+            }
+            single(.success(contents))
+            return disposable
+          }
+      }
+
+      loadText(from: "Podfile")
+        .subscribe {
+          print($0)
+        } onError: {
+          print($0)
+        }.disposed(by: disposeBag)
+
+    }
+
+    example(of: "Challenge 1: Perform side effects") {
+      Observable
+        .never()
+        .subscribe { event in
+          print(event)
+        }
+        .disposed(by: DisposeBag())
     }
 
   }
@@ -123,9 +217,10 @@ class MainViewController: UIViewController {
   }
 }
 
+
 extension MainViewController {
   public func example(of description: String, action: () -> Void) {
-    print("\n-- Example of:", description, "---")
+    print("\n---Example","\(description)","---")
     action()
   }
 }
