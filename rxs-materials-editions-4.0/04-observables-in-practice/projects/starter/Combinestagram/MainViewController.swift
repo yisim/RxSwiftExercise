@@ -248,6 +248,100 @@ class MainViewController: UIViewController {
         .disposed(by: disposeBag)
     }
 
+    example(of: "PublishSubject") {
+      let subject = PublishSubject<String>()
+      subject.on(.next("Is anyone listening?"))
+      let subcripitonOne = subject
+        .subscribe { event in
+          print(event)
+        }
+      subject.on(.next("1"))
+      subject.onNext("2")
+      let subscriptionTwo = subject
+        .subscribe { event in
+          print("2)",event.element ?? event)
+        }
+      subject.onNext("3")
+      subcripitonOne.dispose()
+      subject.onNext("4")
+
+      subject.onCompleted()
+      subject.onNext("5")
+      subscriptionTwo.dispose()
+
+      let disposeBag = DisposeBag()
+      subject
+        .subscribe { event in
+          print("3)", event.element ?? event)
+        }
+        .disposed(by: disposeBag)
+      subject.onNext("?")
+    }
+
+    func myprint<T: CustomStringConvertible>(label: String, event: Event<T>){
+      print(label, (event.element ?? event.error) ?? event)
+    }
+
+    example(of: "BehaviorSubject") {
+      enum MyError: Error {
+        case anError
+      }
+      let subject = BehaviorSubject<String>(value: "initail value")
+      let disposeBag = DisposeBag()
+      subject.onNext("x")
+      subject
+        .subscribe { event in
+          myprint(label: "1)", event: event)
+        }
+        .disposed(by: disposeBag)
+      subject.onError(MyError.anError)
+      subject
+        .subscribe { event in
+          myprint(label: "2)", event: event)
+        }
+        .disposed(by: disposeBag)
+    }
+
+    example(of: "ReplaySubject") {
+      enum MyError: Error {
+        case anError
+      }
+      let subject = ReplaySubject<String>.create(bufferSize: 2)
+      let disposeBag = DisposeBag()
+      subject.onNext("1")
+      subject.onNext("2")
+      subject.onNext("3")
+      subject
+        .subscribe {
+          myprint(label: "1)", event: $0)
+        }
+        .disposed(by: disposeBag)
+      subject
+        .subscribe {
+          myprint(label: "2)", event: $0)
+        }
+        .disposed(by: disposeBag)
+      subject.onNext("4")
+      subject.onError(MyError.anError)
+//      subject.dispose()
+      subject
+        .subscribe {
+          myprint(label: "3)", event: $0)
+        }
+        .disposed(by: disposeBag)
+    }
+
+    example(of: "PublishRelay") {
+      let relay = PublishRelay<String>()
+      let disposeBag = DisposeBag()
+      relay.accept("knock, knock, anyone home?")
+      relay
+        .subscribe { event in
+          myprint(label: "1)", event: event)
+        }
+        .disposed(by: disposeBag)
+      relay.accept("1")
+    }
   }
 
   func showMessage(_ title: String, description: String? = nil) {
@@ -256,7 +350,6 @@ class MainViewController: UIViewController {
     present(alert, animated: true, completion: nil)
   }
 }
-
 
 extension MainViewController {
   public func example(of description: String, action: () -> Void) {
