@@ -1058,13 +1058,39 @@ extension MainViewController {
 
       return phone
     }
+    
+    let convert: (String) -> Int? = { value in
+      if let number = Int(value),
+         number < 10 {
+        return number
+      }
+      
+      let keyMap: [String: Int] = [
+        "abc": 2, "def": 3, "ghi": 4,
+        "jkl": 5, "mno": 6, "pqrs": 7,
+        "tuv": 8, "wxyz": 9
+      ]
+      
+      let converted = keyMap
+        .filter { $0.key.contains(value.lowercased()) }
+        .map(\.value)
+        .first
+      
+      return converted
+    }
 
     example(of: "phone") {
       let disposeBag = DisposeBag()
 
-      let input = PublishSubject<Int>()
+      let input = PublishSubject<Any?>()
 
       input
+        .map({
+          if let a = $0 as? Int { return a }
+          if let b = $0 as? String { return convert(b) }
+          return nil
+        })
+        .compactMap { $0 }
         .skipWhile {
           $0 == 0
         }
@@ -1094,7 +1120,7 @@ extension MainViewController {
 
       // Confirm that 7 results in "Contact not found",
       // and then change to 2 and confirm that Shai is found
-      input.onNext(2)
+      input.onNext("abc")
 
       "5551212".forEach {
         if let number = (Int("\($0)")) {
