@@ -63,7 +63,7 @@ class MainViewController: UIViewController {
       })
       .disposed(by: bag)
     
-    test5()
+    test6()
     
   }
   
@@ -1130,6 +1130,12 @@ extension MainViewController {
 
       input.onNext(9)
     }
+  }
+}
+
+extension MainViewController {
+  func test6() {
+
   }
 }
 
